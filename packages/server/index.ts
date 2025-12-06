@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
+import z from 'zod';
 
 dotenv.config();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -13,8 +14,19 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const conversations = new Map<string, string>();
+const chatSchema = z.strictObject({
+   prompt: z.string().trim().min(1, 'prompt is required').max(1000, 'prompt is too long (max 1000 characters)'),
+   conversationId: z.string().uuid(),
+});
 
 app.post('/api/chat', async (req: Request, res: Response) => {
+   const { success, error } = chatSchema.safeParse(req.body);
+
+   if (!success) {
+      res.status(400).json({ error: z.treeifyError(error) });
+      return;
+   }
+
    const { prompt, conversationId } = req.body;
    console.log('Before: ', conversations);
 
