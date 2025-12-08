@@ -6,6 +6,15 @@ import type { Message } from './ChatMessages';
 import ChatMessages from './ChatMessages';
 import TypingIndicator from './TypingIndicator';
 
+import popSound from '@/assets/sounds/pop.mp3';
+import notificationSound from '@/assets/sounds/notification.mp3';
+
+const popAudio = new Audio(popSound);
+popAudio.volume = 0.2;
+
+const notificationAudio = new Audio(notificationSound);
+notificationAudio.volume = 0.2;
+
 interface ChatResponse {
    message: string;
 }
@@ -22,12 +31,14 @@ const Chatbot = () => {
          setError('');
          setMessages((prev) => [...prev, { content: prompt, role: 'user' }]);
          setIsBotTyping(true);
+         popAudio.play();
 
          const { data } = await axios.post<ChatResponse>('/api/chat', {
             prompt,
             conversationId: conversationId.current,
          });
          setMessages((prev) => [...prev, { content: data.message, role: 'bot' }]);
+         notificationAudio.play();
       } catch (error) {
          console.error(error);
          setError('Something went wrong. Please try again later.');
